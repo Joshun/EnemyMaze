@@ -7,7 +7,11 @@ A simple game with enemies moving
 
 P : player (can only be declared once)
 
-E : vertical enemy
+V : vertical enemy
+
+H : horizontal enemy
+
+E : exploder enemy
 
 "element of grid" : a single character
 
