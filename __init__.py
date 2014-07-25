@@ -17,18 +17,22 @@ def main():
         done = True
     else:
         mainFont = pygame.font.SysFont(None, 24)
-        mainFontX = 0
-        mainFontY = 0
     screen = pygame.display.set_mode((scr_width, scr_height))
     clock = pygame.time.Clock()
+    tick = 1
+    ultimateTime = 0
+    lastBulletTime = 0
     pygame.key.set_repeat(1, 10)
     map1 = Map(scr_width, scr_height, scr_tile, screen, "map1.map")
     player1 = map1.getPlayer()
     player1.setSpeed(4)
+    player1.setMaxBullets(10)
     enemies = map1.getEnemies()
 
 
     while not done:
+        if tick > 60:
+            tick = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -37,29 +41,34 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     done = True
                 if event.key == pygame.K_LEFT:
-                    print('Left key pressed!')
+                    #print('Left key pressed!')
                     keystates['LEFT'] = True
                 if event.key == pygame.K_RIGHT:
-                    print('Right key pressed!')
+                    #print('Right key pressed!')
                     keystates['RIGHT'] = True
                 if event.key == pygame.K_UP:
-                    print('Up key pressed!')
+                   # print('Up key pressed!')
                     keystates['UP'] = True
                 if event.key == pygame.K_DOWN:
-                    print('Down key pressed!')
+                    #print('Down key pressed!')
                     keystates['DOWN'] = True
+                if event.key == pygame.K_SPACE:
+                    #print('Space key pressed!')
+                    if ultimateTime - lastBulletTime > 20:
+                        player1.fireBullet()
+                        lastBulletTime = ultimateTime
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    print('Left key released!')
+                    #print('Left key released!')
                     keystates['LEFT'] = False
                 if event.key == pygame.K_RIGHT:
-                    print('Right key released!')
+                   # print('Right key released!')
                     keystates['RIGHT'] = False
                 if event.key == pygame.K_UP:
-                    print('Up key released')
+                   # print('Up key released')
                     keystates['UP'] = False
                 if event.key == pygame.K_DOWN:
-                    print('Down key released')
+                   # print('Down key released')
                     keystates['DOWN'] = False
 
         # Test object to see if player will collide if it moves in the direction directed to by the user
@@ -84,19 +93,36 @@ def main():
                 player1.goDown()
 
         for item in enemies:
+            #print('Item type:', item.__class__.__name__)
             if item.checkCollision(player1):
                 print('Enemy hit player!!!')
                 player1.loseHealth(2)
             item.processMovement(map1)
+            for bullet in player1.bullets:
+                if item.checkCollision(bullet):
+                    if item in enemies:
+                        enemies.remove(item)
+                    if item in map1.sprites:
+                        map1.removeItem(item)
+
+        player1.processBullets()
+
+        #for item in player1.bullets:
+        #    print('Bullet #{0}: x={1}'.format(bulletNum, item.x))
 
         if player1.health <= 0:
             print('You died, game over!')
             done = True
 
+        #print('Bullets: {0}'.format(player1.getNumBullets()))
+
         screen.fill(COL_BLACK)
         map1.draw()
+        player1.drawBullets()
         drawHealth(screen, mainFont, player1.health)
         pygame.display.flip()
+        tick += 1
+        ultimateTime += 1
         clock.tick(60)
 
 def drawHealth(screen, font, health):

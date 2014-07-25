@@ -40,8 +40,17 @@ class Map:
                                 playerDeclared = True
                             else:
                                 print('Error: player declared multiple times in mapfile')
-                        elif element == 'E':  # Enemy object
+                        elif element == 'V':  # Enemy object
                             spriteElement = Enemy(xPos, yPos, self.tileSize, self.tileSize, self.screen)
+                            self.sprites.append(spriteElement)
+                        elif element == 'H':  # Horizontal enemy object
+                            spriteElement = Enemy(xPos, yPos, self.tileSize, self.tileSize, self.screen, etype='horizontal')
+                            self.sprites.append(spriteElement)
+                        elif element == 'X':  # Exit wall object
+                            spriteElement = Wall(xPos, yPos, self.tileSize, self.tileSize, self.screen, isExit=True)
+                            self.sprites.append(spriteElement)
+                        elif element == 'E':  # Exploder enemy object
+                            spriteElement = ExploderEnemy(xPos, yPos, self.tileSize, self.tileSize, self.screen)
                             self.sprites.append(spriteElement)
                         xPos += self.tileSize
                     xPos = 0
@@ -58,9 +67,11 @@ class Map:
     def getEnemies(self):
         enemyArr = []
         for item in self.sprites:
-            if item.__class__.__name__ == 'Enemy':
+            if item.__class__.__name__ == 'Enemy' or item.__class__.__name__ == 'ExploderEnemy':
                 enemyArr.append(item)
         return enemyArr
+    def removeItem(self, item):
+        self.sprites.remove(item)
     def checkCollisions(self, testObject):
         testObjectType = testObject.__class__.__name__
         for item in self.sprites:
@@ -68,6 +79,11 @@ class Map:
             if collisionOccurred == True:
                 itemType = item.__class__.__name__
                 if itemType == 'Wall':
-                    return 1
+                    if item.isExit == True:
+                        print('You have reached the exit, well done!')
+                    if item.isSolid == False:
+                        return False
+                    else:
+                        return True
 
         return 0
