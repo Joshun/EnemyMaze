@@ -23,11 +23,17 @@ def main():
     ultimateTime = 0
     lastBulletTime = 0
     pygame.key.set_repeat(1, 10)
-    map1 = Map(scr_width, scr_height, scr_tile, screen, "map1.map")
-    player1 = map1.getPlayer()
+    maps = MapDB(scr_width, scr_height, scr_tile, screen, "maps.list")
+    #map1 = Map(scr_width, scr_height, scr_tile, screen, "map1.map")
+    #map2 = Map(scr_width, scr_height, scr_tile, screen, "map2.map")
+    #maps.loadMapList("maps.list")
+    #maps.addMap(map1)
+    #maps.addMap(map2)
+    currentMap = maps.currentMap()
+    player1 = currentMap.getPlayer()
     player1.setSpeed(4)
     player1.setMaxBullets(10)
-    enemies = map1.getEnemies()
+    enemies = currentMap.getEnemies()
 
 
     while not done:
@@ -82,7 +88,8 @@ def main():
         if keystates['DOWN']:
             testCoords.y += player1.speed
 
-        if not map1.checkCollisions(testCoords):
+        collisionStatus = currentMap.checkCollisions(testCoords)
+        if collisionStatus == 0:
             if keystates['LEFT']:
                 player1.goLeft()
             if keystates['RIGHT']:
@@ -91,19 +98,28 @@ def main():
                 player1.goUp()
             if keystates['DOWN']:
                 player1.goDown()
+        elif collisionStatus == 2:
+            testMap = maps.nextMap()
+            if testMap is not False:
+                previousHealth = player1.health
+                currentMap = testMap
+                player1 = currentMap.getPlayer()
+                player1.health = previousHealth
+                player1.setSpeed(4)
+                enemies = currentMap.getEnemies()
 
         for item in enemies:
             #print('Item type:', item.__class__.__name__)
             if item.checkCollision(player1):
                 print('Enemy hit player!!!')
                 player1.loseHealth(2)
-            item.processMovement(map1)
+            item.processMovement(currentMap)
             for bullet in player1.bullets:
                 if item.checkCollision(bullet):
                     if item in enemies:
                         enemies.remove(item)
-                    if item in map1.sprites:
-                        map1.removeItem(item)
+                    if item in currentMap.sprites:
+                        currentMap.removeItem(item)
 
         player1.processBullets()
 
@@ -117,7 +133,7 @@ def main():
         #print('Bullets: {0}'.format(player1.getNumBullets()))
 
         screen.fill(COL_BLACK)
-        map1.draw()
+        currentMap.draw()
         player1.drawBullets()
         drawHealth(screen, mainFont, player1.health)
         pygame.display.flip()
